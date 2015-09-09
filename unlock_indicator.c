@@ -55,11 +55,11 @@ extern cairo_surface_t *img;
 extern bool tile;
 /* The background color to use (in hex). */
 extern char color[7];
-/* Indicator colors (in hex). */
 extern char red[7];
 extern char green[7];
 extern char blue[7];
 extern char outline[7];
+extern char background[7];
 
 /* Whether the failed attempts should be displayed. */
 extern bool show_failed_attempts;
@@ -119,6 +119,42 @@ xcb_pixmap_t draw_image(uint32_t *resolution) {
     cairo_surface_t *xcb_output = cairo_xcb_surface_create(conn, bg_pixmap, vistype, resolution[0], resolution[1]);
     cairo_t *xcb_ctx = cairo_create(xcb_output);
 
+
+    char redgroups[3][3] = {{red[0], red[1], '\0'},
+                            {red[2], red[3], '\0'},
+                            {red[4], red[5], '\0'}};
+    uint32_t red16[3] = {(strtol(redgroups[0], NULL, 16)),
+                         (strtol(redgroups[1], NULL, 16)),
+                         (strtol(redgroups[2], NULL, 16))};
+
+    char greengroups[3][3] = {{green[0], green[1], '\0'},
+                              {green[2], green[3], '\0'},
+                              {green[4], green[5], '\0'}};
+    uint32_t green16[3] = {(strtol(greengroups[0], NULL, 16)),
+                           (strtol(greengroups[1], NULL, 16)),
+                           (strtol(greengroups[2], NULL, 16))};
+
+    char bluegroups[3][3] = {{blue[0], blue[1], '\0'},
+                             {blue[2], blue[3], '\0'},
+                             {blue[4], blue[5], '\0'}};
+    uint32_t blue16[3] = {(strtol(bluegroups[0], NULL, 16)),
+                          (strtol(bluegroups[1], NULL, 16)),
+                          (strtol(bluegroups[2], NULL, 16))};
+
+    char outgroups[3][3] = {{outline[0], outline[1], '\0'},
+                            {outline[2], outline[3], '\0'},
+                            {outline[4], outline[5], '\0'}};
+    uint32_t out16[3] = {(strtol(outgroups[0], NULL, 16)),
+                         (strtol(outgroups[1], NULL, 16)),
+                         (strtol(outgroups[2], NULL, 16))};
+
+    char bggroups[3][3] = {{background[0], background[1], '\0'},
+                           {background[2], background[3], '\0'},
+                           {background[4], background[5], '\0'}};
+    uint32_t bg16[3] = {(strtol(bggroups[0], NULL, 16)),
+                        (strtol(bggroups[1], NULL, 16)),
+                        (strtol(bggroups[2], NULL, 16))};
+
     if (img) {
         if (!tile) {
             cairo_set_source_surface(xcb_ctx, img, 0, 0);
@@ -140,7 +176,7 @@ xcb_pixmap_t draw_image(uint32_t *resolution) {
         uint32_t rgb16[3] = {(strtol(strgroups[0], NULL, 16)),
                              (strtol(strgroups[1], NULL, 16)),
                              (strtol(strgroups[2], NULL, 16))};
-        cairo_set_source_rgb(xcb_ctx, rgb16[0] / 255.0, rgb16[1] / 255.0, rgb16[2] / 255.0);
+        cairo_set_source_rgb(xcb_ctx, rgb16[0] / 255.0, rgb16[1] / 255.0, rgb16[1] / 255.0);
         cairo_rectangle(xcb_ctx, 0, 0, resolution[0], resolution[1]);
         cairo_fill(xcb_ctx);
     }
@@ -158,48 +194,34 @@ xcb_pixmap_t draw_image(uint32_t *resolution) {
 
         /* Use the appropriate color for the different PAM states
          * (currently verifying, wrong password, or default) */
-        char pam_color[7] = "000000";
         switch (pam_state) {
             case STATE_PAM_VERIFY:
-                memcpy(pam_color, blue, sizeof(pam_color));
+                cairo_set_source_rgba(ctx, blue16[0] / 255.0, blue16[1] / 255.0, blue16[2] / 255.0, 1.0);
                 break;
             case STATE_PAM_WRONG:
-                memcpy(pam_color, red, sizeof(pam_color));
+                cairo_set_source_rgba(ctx, red16[0] / 255.0, red16[1] / 255.0, red16[2] / 255.0, 1.0);
                 break;
             default:
+                cairo_set_source_rgba(ctx, bg16[0] / 255.0, bg16[1] / 255.0, bg16[2] / 255.0, 1.0);
                 break;
         }
-        char strgroups[3][3] = {{pam_color[0], pam_color[1], '\0'},
-                                {pam_color[2], pam_color[3], '\0'},
-                                {pam_color[4], pam_color[5], '\0'}};
-        uint32_t rgb16[3] = {(strtol(strgroups[0], NULL, 16)),
-                             (strtol(strgroups[1], NULL, 16)),
-                             (strtol(strgroups[2], NULL, 16))};
-        cairo_set_source_rgb(ctx, rgb16[0] / 255.0, rgb16[1] / 255.0, rgb16[2] / 255.0);
         cairo_fill_preserve(ctx);
 
         switch (pam_state) {
             case STATE_PAM_VERIFY:
-                memcpy(pam_color, blue, sizeof(pam_color));
+                cairo_set_source_rgb(ctx, blue16[0] / 255.0, blue16[1] / 255.0, blue16[2] / 255.0);
                 break;
             case STATE_PAM_WRONG:
-                memcpy(pam_color, red, sizeof(pam_color));
+                cairo_set_source_rgb(ctx, red16[0] / 255.0, red16[1] / 255.0, red16[2] / 255.0);
                 break;
             case STATE_PAM_IDLE:
-                memcpy(pam_color, green, sizeof(pam_color));
+                cairo_set_source_rgb(ctx, bg16[0] / 255.0, bg16[1] / 255.0, bg16[2] / 255.0);
                 break;
         }
-        char astrgroups[3][3] = {{pam_color[0], pam_color[1], '\0'},
-                                 {pam_color[2], pam_color[3], '\0'},
-                                 {pam_color[4], pam_color[5], '\0'}};
-        uint32_t argb16[3] = {(strtol(astrgroups[0], NULL, 16)),
-                              (strtol(astrgroups[1], NULL, 16)),
-                              (strtol(astrgroups[2], NULL, 16))};
-        cairo_set_source_rgb(ctx, argb16[0] / 255.0, argb16[1] / 255.0, argb16[2] / 255.0);
         cairo_stroke(ctx);
 
         /* Draw an inner seperator line. */
-        cairo_set_source_rgb(ctx, 0, 0, 0);
+        cairo_set_source_rgb(ctx, out16[0] / 255.0, out16[1] / 255.0, out16[2] / 255.0);
         cairo_set_line_width(ctx, 2.0);
         cairo_arc(ctx,
                   BUTTON_CENTER /* x */,
@@ -216,7 +238,7 @@ xcb_pixmap_t draw_image(uint32_t *resolution) {
         /* We don't want to show more than a 3-digit number. */
         char buf[4];
 
-        cairo_set_source_rgb(ctx, 0, 0, 0);
+        cairo_set_source_rgb(ctx, out16[0] / 255.0, out16[1] / 255.0, out16[2] / 255.0);
         cairo_set_font_size(ctx, 28.0);
         switch (pam_state) {
             case STATE_PAM_VERIFY:
@@ -233,7 +255,7 @@ xcb_pixmap_t draw_image(uint32_t *resolution) {
                         snprintf(buf, sizeof(buf), "%d", failed_attempts);
                         text = buf;
                     }
-                    cairo_set_source_rgb(ctx, 1, 0, 0);
+                    cairo_set_source_rgba(ctx, red16[0] / 255.0, red16[1] / 255.0, red16[2] / 255.0, 1.0);
                     cairo_set_font_size(ctx, 32.0);
                 }
                 break;
@@ -282,16 +304,16 @@ xcb_pixmap_t draw_image(uint32_t *resolution) {
                       highlight_start + (M_PI / 3.0));
             if (unlock_state == STATE_KEY_ACTIVE) {
                 /* For normal keys, we use a lighter green. */
-                cairo_set_source_rgb(ctx, 51.0 / 255, 219.0 / 255, 0);
+                cairo_set_source_rgb(ctx, green16[0] / 255.0, green16[1] / 255.0, green16[2] / 255.0);
             } else {
                 /* For backspace, we use red. */
-                cairo_set_source_rgb(ctx, 219.0 / 255, 51.0 / 255, 0);
+                cairo_set_source_rgb(ctx, red16[0] / 255.0, red16[1] / 255.0, red16[2] / 255.0);
             }
             cairo_stroke(ctx);
 
             /* Draw two little separators for the highlighted part of the
              * unlock indicator. */
-            cairo_set_source_rgb(ctx, 0, 0, 0);
+            cairo_set_source_rgb(ctx, out16[0] / 255.0, out16[1] / 255.0, out16[2] / 255.0);
             cairo_arc(ctx,
                       BUTTON_CENTER /* x */,
                       BUTTON_CENTER /* y */,

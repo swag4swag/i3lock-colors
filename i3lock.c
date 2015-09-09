@@ -48,8 +48,9 @@ typedef void (*ev_callback_t)(EV_P_ ev_timer *w, int revents);
 char color[7] = "ffffff";
 char red[7] = "ff0000";
 char green[7] = "00ff00";
-char blue[7] = "0000ff";
+char blue[7] = "0000cc";
 char outline[7] = "222222";
+char background[7] = "cccccc";
 int inactivity_timeout = 30;
 uint32_t last_resolution[2];
 xcb_window_t win;
@@ -750,10 +751,11 @@ int main(int argc, char *argv[]) {
         {"beep", no_argument, NULL, 'b'},
         {"dpms", no_argument, NULL, 'd'},
         {"color", required_argument, NULL, 'c'},
-        {"red", required_argument, NULL, '1'},
-        {"green", required_argument, NULL, '2'},
-        {"blue", required_argument, NULL, '3'},
-        {"outline", required_argument, NULL, 'o'},
+        {"red", required_argument, NULL, 'R'},
+        {"green", required_argument, NULL, 'G'},
+        {"blue", required_argument, NULL, 'B'},
+        {"outline", required_argument, NULL, 'O'},
+        {"background", required_argument, NULL, 'D'},
         {"pointer", required_argument, NULL, 'p'},
         {"debug", no_argument, NULL, 0},
         {"help", no_argument, NULL, 'h'},
@@ -770,7 +772,7 @@ int main(int argc, char *argv[]) {
     if ((username = pw->pw_name) == NULL)
         errx(EXIT_FAILURE, "pw->pw_name is NULL.\n");
 
-    char *optstring = "hvnbdc:p:ui:teI:f";
+    char *optstring = "hvnbdc:R:G:B:O:D:p:ui:teI:f";
     while ((o = getopt_long(argc, argv, optstring, longopts, &optind)) != -1) {
         switch (o) {
             case 'v':
@@ -803,7 +805,7 @@ int main(int argc, char *argv[]) {
 
                 break;
             }
-            case '1': {
+            case 'R': {
                 char *arg = optarg;
 
                 /* Skip # if present */
@@ -815,7 +817,7 @@ int main(int argc, char *argv[]) {
 
                 break;
             }
-            case '2': {
+            case 'G': {
                 char *arg = optarg;
 
                 /* Skip # if present */
@@ -827,7 +829,7 @@ int main(int argc, char *argv[]) {
 
                 break;
             }
-            case '3': {
+            case 'B': {
                 char *arg = optarg;
 
                 /* Skip # if present */
@@ -839,7 +841,7 @@ int main(int argc, char *argv[]) {
 
                 break;
             }
-            case 'o': {
+            case 'O': {
                 char *arg = optarg;
 
                 /* Skip # if present */
@@ -851,7 +853,7 @@ int main(int argc, char *argv[]) {
 
                 break;
             }
-            case 'u':
+            case 'D':
                 unlock_indicator = false;
                 break;
             case 'i':
@@ -880,7 +882,7 @@ int main(int argc, char *argv[]) {
                 show_failed_attempts = true;
                 break;
             default:
-                errx(EXIT_FAILURE, "Syntax: i3lock [-v] [-n] [-b] [-d] [-c color] [-u] [-p win|default]"
+                errx(EXIT_FAILURE, "Syntax: i3lock [-v] [-n] [-b] [-d] [-c color] [-R color] [-G color] [-B color] [-O color] [-D color] [-u] [-p win|default]"
                                    " [-i image.png] [-t] [-e] [-I timeout] [-f]");
         }
     }
