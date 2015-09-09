@@ -50,7 +50,7 @@ char red[7] = "ff0000";
 char green[7] = "00ff00";
 char blue[7] = "0000cc";
 char outline[7] = "222222";
-char background[7] = "cccccc";
+char background[7] = "555555";
 int inactivity_timeout = 30;
 uint32_t last_resolution[2];
 xcb_window_t win;
@@ -853,7 +853,19 @@ int main(int argc, char *argv[]) {
 
                 break;
             }
-            case 'D':
+            case 'D': {
+                char *arg = optarg;
+
+                /* Skip # if present */
+                if (arg[0] == '#')
+                    arg++;
+
+                if (strlen(arg) != 6 || sscanf(arg, "%06[0-9a-fA-F]", background) != 1)
+                    errx(EXIT_FAILURE, "color is invalid, it must be given in 3-byte hexadecimal format: rrggbb\n");
+
+                break;
+            }
+            case 'u':
                 unlock_indicator = false;
                 break;
             case 'i':
